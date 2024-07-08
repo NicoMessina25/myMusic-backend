@@ -20,17 +20,20 @@ class SongListResource(Resource):
     def post(self):
         data = request.get_json()
         song_dict = song_schema.load(data)
-        song = Song(title=song_dict['title'],
-                    length=song_dict['length'],
-                    year=song_dict['year'],
-                    director=song_dict['director']
-        )
-        for actor in song_dict['actors']:
-            song.actors.append(User(actor['name']))
-        song.save()
-        print(song)
-        resp = song_schema.dump(song)
-        return resp, 201
+        try:
+            song = Song(title=song_dict['title'],
+                        length=song_dict['length'],
+                        year=song_dict['year'],
+                        director=song_dict['director']
+            )
+            for actor in song_dict['actors']:
+                song.actors.append(User(actor['name']))
+            song.save()
+            resp = song_schema.dump(song)
+            return resp, 201
+        except RuntimeError as err:
+            print(err)
+            return resp, 405
     
 class SongResource(Resource):
     def get(self, song_id):
