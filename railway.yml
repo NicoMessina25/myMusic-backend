@@ -1,0 +1,9 @@
+version: 2
+services:
+  web:
+    image: railway/python
+    build:
+      dockerfile: Dockerfile
+    command: /opt/venv/bin/python /path/to/your/app.py
+    env:
+      - RAILWAY=true
