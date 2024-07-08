@@ -7,4 +7,4 @@ app = create_app(settings_module)
 
 @app.route('/')
 def hello():
-    return 'My First API !!'
+    return 'MyMusic API'
