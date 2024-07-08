@@ -20,6 +20,7 @@ class SongListResource(Resource):
     def post(self):
         data = request.get_json()
         song_dict = song_schema.load(data)
+        print(song_dict)
         try:
             song = Song(title=song_dict['title'],
                         length=song_dict['length'],
@@ -31,7 +32,7 @@ class SongListResource(Resource):
             song.save()
             resp = song_schema.dump(song)
             return resp, 201
-        except RuntimeError as err:
+        except Exception as err:
             print(err)
             return resp, 405
     
