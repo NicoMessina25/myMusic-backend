@@ -20,16 +20,15 @@ class SongListResource(Resource):
     def post(self):
         data = request.get_json()
         song_dict = song_schema.load(data)
-        print(song_dict)
         song = Song(title=song_dict['title'],
                     length=song_dict['length'],
                     year=song_dict['year'],
                     director=song_dict['director']
         )
-        print(song)
         for actor in song_dict['actors']:
             song.actors.append(User(actor['name']))
         song.save()
+        print(song)
         resp = song_schema.dump(song)
         return resp, 201
     
