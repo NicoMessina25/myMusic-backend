@@ -4,6 +4,6 @@ services:
     image: railway/python
     build:
       dockerfile: Dockerfile
-    command: /opt/venv/bin/python /path/to/your/app.py
+    command: /opt/venv/bin/python entrypoint.py
     env:
       - RAILWAY=true
