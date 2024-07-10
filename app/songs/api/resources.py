@@ -1,5 +1,6 @@
 from flask import request, Blueprint
 from flask_restful import Api, Resource
+import sqlite3
 
 from .schemas import SongSchema
 from ..models import Song, User
@@ -13,14 +14,17 @@ api = Api(songs_bp)
 
 class SongListResource(Resource):
     def get(self):
-        songs = Song.get_all()
+        try:
+            songs = Song.get_all()
+        except Exception as err:
+            print(err)
+            return result, 405
         result = song_schema.dump(songs, many=True)
         return result
     
     def post(self):
         data = request.get_json()
         song_dict = song_schema.load(data)
-        print(song_dict)
         try:
             song = Song(title=song_dict['title'],
                         length=song_dict['length'],

@@ -1,6 +1,7 @@
 from flask import Flask, jsonify
 from flask_restful import Api
 from flask_cors import CORS
+from dotenv import load_dotenv
 
 from app.common.error_handling import ObjectNotFound, AppErrorBaseClass
 from app.db import db
@@ -14,7 +15,10 @@ def create_app(settings_module):
     
     # Habilita el CORS
     CORS(app)
-
+    
+    # Cargar variables de entorno
+    load_dotenv()
+    
     # Inicializa las extensiones
     db.init_app(app)
     ma.init_app(app)
