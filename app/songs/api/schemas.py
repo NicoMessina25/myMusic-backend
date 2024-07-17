@@ -4,14 +4,15 @@ from app.ext import ma
 
 
 class SongSchema(ma.Schema):
-    id = fields.Integer(dump_only=True)
+    songId = fields.Integer()
     title = fields.String()
     length = fields.Integer()
-    year = fields.Integer()
-    director = fields.String()
-    actors = fields.Nested('UserSchema', many=True)
+    releaseDate = fields.Date(allow_none=True)
+    artists = fields.Nested('ArtistSchema', many=True)
 
 
-class UserSchema(ma.Schema):
-    id = fields.Integer(dump_only=True)
+class ArtistSchema(ma.Schema):
+    artistId = fields.Integer()
     name = fields.String()
+    
+    
