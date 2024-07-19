@@ -1,18 +1,27 @@
 from flask import request, Blueprint
 from flask_restful import Api, Resource
-from ...common.custom_response import CustomResponse
+from ....common.custom_response import CustomResponse
 import sqlite3
 
-from .schemas import SongSchema
-from ..models import Song, Artist
-from ...common.error_handling import ObjectNotFound
-from ...common.utils import retrieve_response_data
+from ..schemas import SongSchema
+from ...models import Song, Artist
+from ....common.error_handling import ObjectNotFound
+from ....common.utils import retrieve_response_data
 
 songs_bp = Blueprint('songs_bp', __name__)
 
 song_schema = SongSchema()
 
 api = Api(songs_bp)
+
+def update_songs_artists(song_dict, song):
+    for artist_dict in song_dict['artists']:
+                artist = Artist.get_by_id(artist_dict["artistId"])
+                
+                if artist is None:                
+                    song.artists.append(Artist(artist_dict['name']))
+                else:
+                    song.artists.append(artist)
 
 class SongListResource(Resource):
     def get(self):
@@ -35,8 +44,7 @@ class SongListResource(Resource):
                         length=song_dict['length'],
                         releaseDate=song_dict['releaseDate']
             )
-            for artist in song_dict['artists']:
-                song.artists.append(Artist(artist['name']))
+            update_songs_artists(song_dict, song)
             song.save()
             resp = song_schema.dump(song)
             return resp, 201
@@ -53,8 +61,7 @@ class SongListResource(Resource):
             song.length = song_dict["length"]
             
             song.artists.clear()
-            for artist in song_dict['artists']:
-                song.artists.append(Artist(artist['name']))
+            update_songs_artists(song_dict, song)
             song.update()
             resp = song_schema.dump(song)
             return resp, 200

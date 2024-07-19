@@ -5,7 +5,8 @@ from dotenv import load_dotenv
 
 from app.common.error_handling import ObjectNotFound, AppErrorBaseClass
 from app.db import db
-from app.songs.api.resources import songs_bp
+from app.songs.api.resources.songResources import songs_bp
+from app.songs.api.resources.artistResources import artist_bp
 from .ext import ma, migrate
 
 
@@ -32,6 +33,7 @@ def create_app(settings_module):
 
     # Registra los blueprints
     app.register_blueprint(songs_bp)
+    app.register_blueprint(artist_bp)
 
     # Registra manejadores de errores personalizados
     register_error_handlers(app)
