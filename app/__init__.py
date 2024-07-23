@@ -2,12 +2,13 @@ from flask import Flask, jsonify
 from flask_restful import Api
 from flask_cors import CORS
 from dotenv import load_dotenv
+from flask_jwt_extended import JWTManager
 
 from app.common.error_handling import ObjectNotFound, AppErrorBaseClass
 from app.db import db
 from app.songs.api.resources import songs_bp
+from app.auth.resources import auth_bp
 from .ext import ma, migrate
-
 
 def create_app(settings_module):
     app = Flask(__name__)
@@ -23,6 +24,7 @@ def create_app(settings_module):
     db.init_app(app)
     ma.init_app(app)
     migrate.init_app(app, db)
+    jwt = JWTManager(app)
 
     # Captura todos los errores 404
     Api(app, catch_all_404s=True)
@@ -32,6 +34,7 @@ def create_app(settings_module):
 
     # Registra los blueprints
     app.register_blueprint(songs_bp)
+    app.register_blueprint(auth_bp, url_prefix='/api/auth')
 
     # Registra manejadores de errores personalizados
     register_error_handlers(app)
@@ -41,7 +44,8 @@ def create_app(settings_module):
 def register_error_handlers(app):
     @app.errorhandler(Exception)
     def handle_exception_error(e):
-        return jsonify({'msg': 'Internal server error'}), 500
+        app.logger.error(f"Error: {str(e)}")
+        return jsonify({'msg': 'Internal server error', 'error': str(e)}), 500
 
     @app.errorhandler(405)
     def handle_405_error(e):
