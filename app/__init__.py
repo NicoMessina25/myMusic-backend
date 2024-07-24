@@ -16,7 +16,7 @@ def create_app(settings_module):
     app.config.from_object(settings_module)
     
     # Habilita el CORS
-    CORS(app)
+    CORS(app, supports_credentials=True)
     
     # Cargar variables de entorno
     load_dotenv()
