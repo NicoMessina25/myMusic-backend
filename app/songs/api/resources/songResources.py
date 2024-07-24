@@ -7,6 +7,7 @@ from ..schemas import SongSchema
 from ...models import Song, Artist
 from ....common.error_handling import ObjectNotFound
 from ....common.utils import retrieve_response_data
+from flask_jwt_extended import current_user, verify_jwt_in_request
 
 songs_bp = Blueprint('songs_bp', __name__)
 
@@ -25,20 +26,23 @@ def update_songs_artists(song_dict, song):
 
 class SongListResource(Resource):
     def get(self):
+        
         resp = CustomResponse(success=True)
         try:
+            print(verify_jwt_in_request(), "verifica")
+            print(current_user(), "usuario")
             limit = request.args.get('limit', default=50, type=int)
             name_filter = request.args.get('filter', default='', type=str)
             
-            query = Artist.query
+            query = Song.query
             if name_filter:
-                query = query.filter(func.lower(Artist.name).ilike(f"%{name_filter.lower()}%"))
+                query = query.filter(func.lower(Song.name).ilike(f"%{name_filter.lower()}%"))
             songs = query.limit(limit).all()
         except Exception as err:
             print(err)
             resp.success = False
             resp.message = "No se pudieron obtener las canciones"
-            return resp, 405
+            return resp.to_server_response(), 401
         
         resp.data = song_schema.dump(songs, many=True)
         return resp.to_server_response()
