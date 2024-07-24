@@ -1,7 +1,7 @@
 from flask import request, Blueprint
 from flask_restful import Api, Resource
 from ....common.custom_response import CustomResponse
-import sqlite3
+from sqlalchemy import func
 
 from ..schemas import SongSchema
 from ...models import Song, Artist
@@ -27,7 +27,13 @@ class SongListResource(Resource):
     def get(self):
         resp = CustomResponse(success=True)
         try:
-            songs = Song.get_all()
+            limit = request.args.get('limit', default=50, type=int)
+            name_filter = request.args.get('filter', default='', type=str)
+            
+            query = Artist.query
+            if name_filter:
+                query = query.filter(func.lower(Artist.name).ilike(f"%{name_filter.lower()}%"))
+            songs = query.limit(limit).all()
         except Exception as err:
             print(err)
             resp.success = False
