@@ -18,6 +18,10 @@ class User(db.Model, BaseModelMixin):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
     
+    @classmethod
+    def get_user_by_username(cls, username):
+        return cls.query.filter_by(username=username).first()
+    
     def to_dict(self):
         return {
             'userid': self.userid,

@@ -6,6 +6,7 @@ from flask_jwt_extended import JWTManager
 
 from app.common.error_handling import ObjectNotFound, AppErrorBaseClass
 from app.db import db
+from app.jwt import jwt
 from app.songs.api.resources.songResources import songs_bp
 from app.songs.api.resources.artistResources import artist_bp
 from app.auth.resources import auth_bp
@@ -25,8 +26,7 @@ def create_app(settings_module):
     db.init_app(app)
     ma.init_app(app)
     migrate.init_app(app, db)
-    jwt = JWTManager(app)
-
+    jwt.init_app(app)
     # Captura todos los errores 404
     Api(app, catch_all_404s=True)
 

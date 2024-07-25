@@ -2,13 +2,14 @@
 
 from flask import Blueprint, request, jsonify
 from flask_restful import Api, Resource
-from app import db
 from app.users.models import User
 from ..users.schemas import UserSchema
+from ..jwt import jwt
 from ..common.utils import retrieve_response_data
 from ..common.custom_response import CustomResponse
 from config.default import JWT_ACCESS_TOKEN_EXPIRES, JWT_REFRESH_TOKEN_EXPIRES
-from flask_jwt_extended import create_access_token, create_refresh_token,jwt_required,get_jwt_identity
+from flask_jwt_extended import create_access_token, create_refresh_token,jwt_required,get_jwt_identity,get_jwt
+from ..auth.models import TokenBlockList
 
 auth_bp = Blueprint('auth', __name__)
 api = Api(auth_bp)
@@ -22,7 +23,7 @@ class Register(Resource):
         user_dict = user_schema.load(retrieve_response_data(request))        
         username = user_dict['username']
 
-        if User.query.filter_by(username=username).first():
+        if User.get_user_by_username(username):
             resp.success = False
             resp.message = "User already exists"
             return resp.to_server_response(), 400
@@ -46,7 +47,7 @@ class Login(Resource):
             username = user_dict['username']
             password = user_dict['password']
 
-            user = User.query.filter_by(username=username).first()
+            user = User.get_user_by_username(username)
             if not user:
                 resp.success = False
                 resp.message = "User already exists"
@@ -92,14 +93,26 @@ class Refresh(Resource):
 class Logout(Resource):
     @jwt_required()
     def post(self):
+        resp = CustomResponse(success=True)
         jti = get_jwt()['jti']
         try:
-            # Agrega el token actual a la lista de bloqueados (revocados)
-            db.session.add(TokenBlocklist(jti=jti))
-            db.session.commit()
-            return jsonify({"msg": "Successfully logged out"}), 200
-        except Exception as e:
-            return jsonify({"msg": "Something went wrong"}), 500
+            tokenblocklist = TokenBlockList(jti=jti)
+            tokenblocklist.save()
+            
+            resp.message = "Successfully logged out"
+            return resp.to_server_response(), 200
+        except Exception as err:
+            print(err)
+            resp.message = err
+            resp.success = False
+            return resp.to_server_response(), 500
+        
+@jwt.token_in_blocklist_loader
+def check_if_token_revoked(jwt_header, jwt_payload: dict) -> bool:
+    jti = jwt_payload["jti"]
+    token = TokenBlockList.query.filter_by(jti=jti).scalar()
+
+    return token is not None
 
 api.add_resource(Register, '/register')
 api.add_resource(Login, '/login')
