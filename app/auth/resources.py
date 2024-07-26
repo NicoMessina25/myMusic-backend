@@ -50,7 +50,7 @@ class Login(Resource):
             user = User.get_user_by_username(username)
             if not user:
                 resp.success = False
-                resp.message = "User already exists"
+                resp.message = "Ya existe un usuario con ese nombre"
                 return resp.to_server_response(), 400
             
             if user.check_password(password):
