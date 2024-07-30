@@ -17,24 +17,14 @@ api = Api(profile_bp)
 class ProfileListResource(Resource):
     def get(self):
         resp = CustomResponse(success=True)
-        try:
-            authenticate_user([EProfile.ADMIN])
-            limit = request.args.get('limit', default=50, type=int)
-            name_filter = request.args.get('filter', default='', type=str)
-            
-            query = Profile.query
-            if name_filter:
-                query = query.filter(func.lower(Profile.name).ilike(f"%{name_filter.lower()}%"))
-            profiles = query.limit(limit).all()
-        except PermissionError as err:
-            resp.success = False
-            resp.message = err            
-            return resp.to_server_response(), 401
-        except Exception as err:
-            print(err)
-            resp.success = False
-            resp.message = "No se pudieron obtener los perfiles"
-            return resp.to_server_response(), 405
+        authenticate_user([EProfile.ADMIN])
+        limit = request.args.get('limit', default=50, type=int)
+        name_filter = request.args.get('filter', default='', type=str)
+        
+        query = Profile.query
+        if name_filter:
+            query = query.filter(func.lower(Profile.name).ilike(f"%{name_filter.lower()}%"))
+        profiles = query.limit(limit).all()
         
         resp.data = profile_schema.dump(profiles, many=True)
         return resp.to_server_response()

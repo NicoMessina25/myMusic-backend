@@ -40,35 +40,30 @@ class Register(Resource):
 
 class Login(Resource):
     def post(self):
-        try:
-            resp = CustomResponse(success=True)
-            
-            user_dict = user_schema.load(retrieve_response_data(request))     
-            username = user_dict['username']
-            password = user_dict['password']
+        resp = CustomResponse(success=True)
+        
+        user_dict = user_schema.load(retrieve_response_data(request))     
+        username = user_dict['username']
+        password = user_dict['password']
 
-            user = User.get_user_by_username(username)
-            if not user:
-                resp.success = False
-                resp.message = "Credenciales inválidas"
-                return resp.to_server_response(), 400
-            
-            if user.check_password(password):
-                access_token = create_access_token(identity=username)
-                refresh_token = create_refresh_token(identity=username)
-                resp.data = {'access_token': access_token,
-                             'access_token_expires': JWT_ACCESS_TOKEN_EXPIRES,
-                             'refresh_token': refresh_token, 
-                             'refresh_token_expires': JWT_REFRESH_TOKEN_EXPIRES,
-                             'user':user.to_dict()}
-                return resp.to_server_response(), 200
+        user = User.get_user_by_username(username)
+        if not user:
+            resp.success = False
             resp.message = "Credenciales inválidas"
-            resp.success = False
-            return resp.to_server_response(), 401
-        except Exception as err:
-            print(err)
-            resp.success = False
-            return resp.to_server_response(),401
+            return resp.to_server_response(), 400
+        
+        if user.check_password(password):
+            access_token = create_access_token(identity=username)
+            refresh_token = create_refresh_token(identity=username)
+            resp.data = {'access_token': access_token,
+                            'access_token_expires': JWT_ACCESS_TOKEN_EXPIRES,
+                            'refresh_token': refresh_token, 
+                            'refresh_token_expires': JWT_REFRESH_TOKEN_EXPIRES,
+                            'user':user.to_dict()}
+            return resp.to_server_response(), 200
+        resp.message = "Credenciales inválidas"
+        resp.success = False
+        return resp.to_server_response(), 401
 
 class Refresh(Resource):
     @jwt_required(refresh=True)
@@ -95,17 +90,11 @@ class Logout(Resource):
     def post(self):
         resp = CustomResponse(success=True)
         jti = get_jwt()['jti']
-        try:
-            tokenblocklist = TokenBlockList(jti=jti)
-            tokenblocklist.save()
-            
-            resp.message = "Successfully logged out"
-            return resp.to_server_response(), 200
-        except Exception as err:
-            print(err)
-            resp.message = err
-            resp.success = False
-            return resp.to_server_response(), 500
+        tokenblocklist = TokenBlockList(jti=jti)
+        tokenblocklist.save()
+        
+        resp.message = "Successfully logged out"
+        return resp.to_server_response(), 200
         
 @jwt.token_in_blocklist_loader
 def check_if_token_revoked(jwt_header, jwt_payload: dict) -> bool:

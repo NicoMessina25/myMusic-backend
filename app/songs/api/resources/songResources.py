@@ -78,29 +78,21 @@ class SongListResource(Resource):
     
 class SongResource(Resource):
     def get(self, song_id):
-        try:
-            authenticate_user([EProfile.ADMINISTRATIVE,EProfile.ADMIN])
-            resp = CustomResponse(success=True)
-            song = Song.get_by_id(song_id)
-            if song is None:
-                resp.message = 'La canción no existe'
-                resp.success = False
-                
-            resp.data = song_schema.dump(song)
-            return resp.to_server_response(), 200
-        except Exception as err:
-                print(err)
-                return resp.to_server_response(), 405
+        authenticate_user([EProfile.ADMINISTRATIVE,EProfile.ADMIN])
+        resp = CustomResponse(success=True)
+        song = Song.get_by_id(song_id)
+        if song is None:
+            resp.message = 'La canción no existe'
+            resp.success = False
+            
+        resp.data = song_schema.dump(song)
+        return resp.to_server_response(), 200
     
     def delete(self, song_id):
         authenticate_user([EProfile.ADMINISTRATIVE,EProfile.ADMIN])
         resp = CustomResponse(success=True)
-        try:
-            song = Song.get_by_id(song_id)
-            song.delete()
-        except Exception as err:
-            print(err)
-            return resp, 405
+        song = Song.get_by_id(song_id)
+        song.delete()
         return resp.to_server_response(), 200
 
 api.add_resource(SongListResource, '/api/songs/', endpoint='song_list_resource')

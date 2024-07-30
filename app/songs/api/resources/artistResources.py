@@ -17,20 +17,13 @@ api = Api(artist_bp)
 class ArtistListResource(Resource):
     def get(self):
         resp = CustomResponse(success=True)
-        try:
-            limit = request.args.get('limit', default=50, type=int)
-            name_filter = request.args.get('filter', default='', type=str)
-            
-            query = Artist.query
-            if name_filter:
-                query = query.filter(func.lower(Artist.name).ilike(f"%{name_filter.lower()}%"))
-            artists = query.limit(limit).all()
-        except Exception as err:
-            print(err)
-            resp.success = False
-            resp.message = "No se pudieron obtener los artistas"
-            return resp.to_server_response(), 405
+        limit = request.args.get('limit', default=50, type=int)
+        name_filter = request.args.get('filter', default='', type=str)
         
+        query = Artist.query
+        if name_filter:
+            query = query.filter(func.lower(Artist.name).ilike(f"%{name_filter.lower()}%"))
+        artists = query.limit(limit).all()
         resp.data = artist_schema.dump(artists, many=True)
         return resp.to_server_response()
 

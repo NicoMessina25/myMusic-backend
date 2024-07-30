@@ -34,99 +34,69 @@ class UserListResource(Resource):
         return resp.to_server_response()
     
     def post(self):
-        try:
-            authenticate_user([EProfile.ADMIN])
-            resp = CustomResponse(success=True)
-            
-            user_dict = user_schema.load(retrieve_response_data(request))        
-            username = user_dict['username']
+        authenticate_user([EProfile.ADMIN])
+        resp = CustomResponse(success=True)
+        
+        user_dict = user_schema.load(retrieve_response_data(request))        
+        username = user_dict['username']
 
-            if User.get_user_by_username(username):
-                resp.success = False
-                resp.message = "Ya existe un usuario con ese nombre"
-                return resp.to_server_response(), 200
-            
-            if User.query.filter_by(email=user_dict["email"]).first():
-                resp.success = False
-                resp.message = "Ya existe un usuario con ese email"
-                return resp.to_server_response(), 200
+        if User.get_user_by_username(username):
+            resp.success = False
+            resp.message = "Ya existe un usuario con ese nombre"
+            return resp.to_server_response(), 200
+        
+        if User.query.filter_by(email=user_dict["email"]).first():
+            resp.success = False
+            resp.message = "Ya existe un usuario con ese email"
+            return resp.to_server_response(), 200
 
-            user = User(
-                username=username,
-                email=user_dict['email'],
-                password=user_dict['password'],
-                profileId=user_dict['profile']["profileId"]
-            )
-            
-            user.save()
-            resp.message = "Usuario creado correctamente"
-            return resp.to_server_response(), 201
-        except PermissionError as err:
-            resp.message = err            
-            return resp.to_server_response(), 401
-        except Exception as err:
-            print(err)
-            return resp, 405
+        user = User(
+            username=username,
+            email=user_dict['email'],
+            password=user_dict['password'],
+            profileId=user_dict['profile']["profileId"]
+        )
+        
+        user.save()
+        resp.message = "Usuario creado correctamente"
+        return resp.to_server_response(), 201
         
     def put(self):
         resp = CustomResponse(success=True)
-        user_dict = user_schema.load(retrieve_response_data(request))
-        try:            
-            authenticate_user([EProfile.ADMIN])
-            user = User.get_by_id(user_dict["userId"])
-            user.username = user_dict["username"]
+        user_dict = user_schema.load(retrieve_response_data(request))          
+        authenticate_user([EProfile.ADMIN])
+        user = User.get_by_id(user_dict["userId"])
+        user.username = user_dict["username"]
+        
+        if "password" in user_dict:
+            password = user_dict["password"].strip()
+            if password != "":
+                user.set_password(password)
             
-            if "password" in user_dict:
-                password = user_dict["password"].strip()
-                if password != "":
-                    user.set_password(password)
-                
-            user.email = user_dict["email"]
-            user.profileId = user_dict["profile"]["profileId"]
-            
-            user.update()
-            resp.data = user_schema.dump(user)
-            return resp.to_server_response(), 200
-        except PermissionError as err:
-            resp.message = err            
-            return resp.to_server_response(), 401
-        except Exception as err:
-            print(err)
-            resp.success = False
-            return resp.to_server_response(), 405
+        user.email = user_dict["email"]
+        user.profileId = user_dict["profile"]["profileId"]
+        
+        user.update()
+        resp.data = user_schema.dump(user)
+        return resp.to_server_response(), 200
     
 class UserResource(Resource):
     def get(self, user_id):
-        try:
-            authenticate_user([EProfile.ADMIN])
-            resp = CustomResponse(success=True)
-            user = User.get_by_id(user_id)
-            if user is None:
-                resp.message = 'El usuario no existe'
-                resp.success = False
-                
-            resp.data = user_schema.dump(user)
-            return resp.to_server_response(), 200
-        except PermissionError as err:
-            resp.message = err            
-            return resp.to_server_response(), 401
-        except Exception as err:
-                print(err)
-                return resp.to_server_response(), 405
+        authenticate_user([EProfile.ADMIN])
+        resp = CustomResponse(success=True)
+        user = User.get_by_id(user_id)
+        if user is None:
+            resp.message = 'El usuario no existe'
+            resp.success = False
+            
+        resp.data = user_schema.dump(user)
+        return resp.to_server_response(), 200
     
     def delete(self, user_id):
         resp = CustomResponse(success=True)
-        try:
-            authenticate_user([EProfile.ADMIN])
-            user = User.get_by_id(user_id)
-            user.delete()
-        except PermissionError as err:
-            resp.success = False
-            resp.message = err            
-            return resp.to_server_response(), 401
-        except Exception as err:
-            print(err)
-            return resp.to_server_response(), 405
+        authenticate_user([EProfile.ADMIN])
+        user = User.get_by_id(user_id)
+        user.delete()
         return resp.to_server_response(), 200
 
 api.add_resource(UserListResource, '/api/users/', endpoint='user_list_resource')
