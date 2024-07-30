@@ -63,9 +63,9 @@ def register_error_handlers(app:Flask):
         resp.message = "Credenciales inválidas"
         return resp.to_server_response(), 401
     
-    def handle_permission_error(err):
+    def handle_permission_error(err:PermissionError):
         resp = CustomResponse(success=False)
-        resp.message = err            
+        resp.message = str(err)            
         return resp.to_server_response(), 403
     
     def handle_exception_error(e):
