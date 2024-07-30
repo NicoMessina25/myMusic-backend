@@ -9,8 +9,12 @@ from app.db import db
 from app.jwt import jwt
 from app.songs.api.resources.songResources import songs_bp
 from app.songs.api.resources.artistResources import artist_bp
+from app.users.api.resources import user_bp
+from app.common.custom_response import CustomResponse
 from app.auth.resources import auth_bp
+from app.profiles.api.resources import profile_bp
 from .ext import ma, migrate
+from jwt.exceptions import InvalidSignatureError, ExpiredSignatureError
 
 def create_app(settings_module):
     app = Flask(__name__)
@@ -37,16 +41,35 @@ def create_app(settings_module):
     app.register_blueprint(songs_bp)
     app.register_blueprint(artist_bp)
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
+    app.register_blueprint(user_bp)
+    app.register_blueprint(profile_bp)
 
     # Registra manejadores de errores personalizados
     register_error_handlers(app)
 
     return app
 
-def register_error_handlers(app):
-    @app.errorhandler(Exception)
+def register_error_handlers(app:Flask):
+    
+    def handle_invalid_signature_error(err):
+        print(err)
+        resp = CustomResponse(success=False)
+        resp.message = "Credenciales inválidas"
+        return resp.to_server_response(), 401
+    
+    def handle_expired_signature_error(err):
+        print(err)
+        resp = CustomResponse(success=False)
+        resp.message = "Credenciales inválidas"
+        return resp.to_server_response(), 401
+    
+    def handle_permission_error(err):
+        resp = CustomResponse(success=False)
+        resp.message = err            
+        return resp.to_server_response(), 403
+    
     def handle_exception_error(e):
-        app.logger.error(f"Error: {str(e)}")
+        print(e)
         return jsonify({'msg': 'Internal server error', 'error': str(e)}), 500
 
     @app.errorhandler(405)
@@ -68,3 +91,9 @@ def register_error_handlers(app):
     @app.errorhandler(ObjectNotFound)
     def handle_object_not_found_error(e):
         return jsonify({'msg': str(e)}), 404
+    
+    app.register_error_handler(InvalidSignatureError, handle_invalid_signature_error)
+    app.register_error_handler(ExpiredSignatureError, handle_expired_signature_error)
+    app.register_error_handler(PermissionError, handle_permission_error)
+    app.register_error_handler(Exception, handle_exception_error)
+    

@@ -29,10 +29,10 @@ class ArtistListResource(Resource):
             print(err)
             resp.success = False
             resp.message = "No se pudieron obtener los artistas"
-            return resp, 405
+            return resp.to_server_response(), 405
         
         resp.data = artist_schema.dump(artists, many=True)
         return resp.to_server_response()
 
-api.add_resource(ArtistListResource, '/api/artists/', endpoint='song_list_resource')
+api.add_resource(ArtistListResource, '/api/artists/', endpoint='profile_list_resource')
 #api.add_resource(ArtistResource, '/api/songs/<int:song_id>', endpoint='song_resource')

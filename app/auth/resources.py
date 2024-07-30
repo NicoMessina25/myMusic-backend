@@ -3,7 +3,7 @@
 from flask import Blueprint, request, jsonify
 from flask_restful import Api, Resource
 from app.users.models import User
-from ..users.schemas import UserSchema
+from ..users.api.schemas import UserSchema
 from ..jwt import jwt
 from ..common.utils import retrieve_response_data
 from ..common.custom_response import CustomResponse
@@ -25,7 +25,7 @@ class Register(Resource):
 
         if User.get_user_by_username(username):
             resp.success = False
-            resp.message = "User already exists"
+            resp.message = "Ya existe un usuario con ese nombre"
             return resp.to_server_response(), 400
 
         user = User(
@@ -35,7 +35,7 @@ class Register(Resource):
         )
         
         user.save()
-        resp.message = "User created successfully"
+        resp.message = "Usuario creado correctamente"
         return resp.to_server_response(), 201
 
 class Login(Resource):
@@ -50,7 +50,7 @@ class Login(Resource):
             user = User.get_user_by_username(username)
             if not user:
                 resp.success = False
-                resp.message = "Ya existe un usuario con ese nombre"
+                resp.message = "Credenciales inválidas"
                 return resp.to_server_response(), 400
             
             if user.check_password(password):
@@ -62,11 +62,11 @@ class Login(Resource):
                              'refresh_token_expires': JWT_REFRESH_TOKEN_EXPIRES,
                              'user':user.to_dict()}
                 return resp.to_server_response(), 200
-            resp.message = "Invalid credentials"
+            resp.message = "Credenciales inválidas"
             resp.success = False
             return resp.to_server_response(), 401
         except Exception as err:
-            resp.message = err
+            print(err)
             resp.success = False
             return resp.to_server_response(),401
 
