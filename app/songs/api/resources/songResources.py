@@ -2,7 +2,6 @@ from flask import request, Blueprint
 from flask_restful import Api, Resource
 from ....common.custom_response import CustomResponse
 from sqlalchemy import func
-
 from ..schemas import SongSchema
 from ...models import Song, Artist
 from ....common.error_handling import ObjectNotFound

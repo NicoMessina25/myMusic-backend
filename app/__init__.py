@@ -9,10 +9,13 @@ from app.db import db
 from app.jwt import jwt
 from app.songs.api.resources.songResources import songs_bp
 from app.songs.api.resources.artistResources import artist_bp
+from app.playlists.api.resources.resources import playlist_bp
+from app.songs.api.resources.songResources import songs_bp
 from app.users.api.resources import user_bp
 from app.common.custom_response import CustomResponse
 from app.auth.resources import auth_bp
 from app.profiles.api.resources import profile_bp
+from app.playlists.api.resources.songResources import playlist_songs_bp
 from .ext import ma, migrate
 from jwt.exceptions import InvalidSignatureError, ExpiredSignatureError
 
@@ -43,6 +46,8 @@ def create_app(settings_module):
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(user_bp)
     app.register_blueprint(profile_bp)
+    app.register_blueprint(playlist_bp)
+    app.register_blueprint(playlist_songs_bp)
 
     # Registra manejadores de errores personalizados
     register_error_handlers(app)

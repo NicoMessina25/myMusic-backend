@@ -1,4 +1,5 @@
 from app.db import db, BaseModelMixin
+from app.playlists.models import playlist_song
 
 song_artist = db.Table(
     "song_artist",
@@ -15,6 +16,7 @@ class Song(db.Model, BaseModelMixin):
     title = db.Column(db.String)
     length = db.Column(db.Integer)
     releaseDate = db.Column(db.Date)
+    playlists = db.relationship('Playlist', secondary = playlist_song, back_populates= 'songs')
     artists = db.relationship(
         'Artist', secondary=song_artist, back_populates="songs"
     )
