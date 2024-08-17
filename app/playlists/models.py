@@ -1,12 +1,13 @@
 from app.db import db, BaseModelMixin
+from datetime import datetime
 
 
 playlist_song = db.Table(
     "playlist_song",
     db.Model.metadata,
-    db.Column("playlistId", db.ForeignKey("song.songId"), primary_key=True),
-    db.Column("songId", db.ForeignKey("playlist.playlistId"), primary_key=True),
-    db.Column("addedAt", db.DateTime, nullable=False, default=db.func.current_timestamp())
+    db.Column("songId", db.ForeignKey("song.songId"), primary_key=True),
+    db.Column("playlistId", db.ForeignKey("playlist.playlistId"), primary_key=True),
+    db.Column("addedAt", db.DateTime, nullable=False)
 )
 
 class Playlist(db.Model, BaseModelMixin):
@@ -16,14 +17,16 @@ class Playlist(db.Model, BaseModelMixin):
     name = db.Column(db.String, nullable=False)
     description = db.Column(db.String, nullable=True)
     userId = db.Column(db.Integer, db.ForeignKey('user.userId'), nullable=False)
-    created_at = db.Column(db.DateTime, nullable=False, default=db.func.current_timestamp())
-    updated_at = db.Column(db.DateTime, nullable=False, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
+    created_at = db.Column(db.DateTime, nullable=False)
+    updated_at = db.Column(db.DateTime, nullable=False)
     songs = db.relationship('Song', secondary= playlist_song, back_populates='playlists')
 
     def __init__(self, name, userId, description=None):
         self.name = name
         self.description = description
         self.userId = userId
+        self.created_at = datetime.now()
+        self.updated_at = datetime.now()
 
     def __repr__(self):
         return f'Playlist({self.name})'

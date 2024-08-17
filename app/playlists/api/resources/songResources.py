@@ -14,10 +14,15 @@ class PlaylistAddSongResource(Resource):
         authenticate_user()
         playlist_song = retrieve_response_data(request)
         playlist = Playlist.get_by_id(playlist_song["playlistId"])
-        song = Song.get_by_id(playlist_song["songId"])
-        playlist.song.append(song)
         
         resp = CustomResponse(success=True)
+        if playlist is None:
+            resp.success = False
+            resp.message = "Playlist inexistente"
+            return resp.to_server_response(), 200
+        
+        song = Song.get_by_id(playlist_song["songId"])
+        playlist.songs.append(song)
         try:
             playlist.update()
         except Exception as err:
@@ -33,10 +38,15 @@ class PlaylistDeleteSongResource(Resource):
         authenticate_user()
         playlist_song = retrieve_response_data(request)
         playlist = Playlist.get_by_id(playlist_song["playlistId"])
+        
+        resp = CustomResponse(success=True)
+        if playlist is None:
+            resp.success = False
+            resp.message = "Playlist inexistente"
+            return resp.to_server_response(), 200
 
         index = 0
-        resp = CustomResponse(success=True)
-        while index < len(playlist.songs) and playlist.songs[index]['songId'] != playlist_song['songId']:
+        while index < len(playlist.songs) and playlist.songs[index].songId != playlist_song['songId']:
             index += 1
         if index < len(playlist.songs):
             playlist.songs.pop(index)
@@ -45,7 +55,7 @@ class PlaylistDeleteSongResource(Resource):
         else:
             resp.success = False
             resp.message = "La cancion no existe en la playlist"
-            resp.to_server_response(), 200
+            return resp.to_server_response(), 200
 
 api.add_resource(PlaylistAddSongResource, '/api/playlist/addSong/', endpoint='playlist_add_song_resource')
 api.add_resource(PlaylistDeleteSongResource, '/api/playlist/deleteSong/', endpoint='playlist_delete_song_resource')

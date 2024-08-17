@@ -7,6 +7,6 @@ class PlaylistSchema(ma.Schema):
     name = fields.String()
     description = fields.String()
     userId = fields.Integer()
-    created_at = fields.DateTime()
-    updated_at = fields.DateTime()
+    created_at = fields.DateTime(allow_none=True)
+    updated_at = fields.DateTime(allow_none=True)
     songs = fields.Nested('SongSchema', many=True)

@@ -1,7 +1,7 @@
 from flask import request, Blueprint
 from flask_restful import Api, Resource
 from ....common.custom_response import CustomResponse
-from sqlalchemy import func
+from sqlalchemy import func,or_
 from ..schemas import SongSchema
 from ...models import Song, Artist
 from ....common.error_handling import ObjectNotFound
@@ -29,12 +29,19 @@ class SongListResource(Resource):
         resp = CustomResponse(success=True)
         try:
             limit = request.args.get('limit', default=50, type=int)
+            offset = request.args.get('offSet', default=0, type=int)
             name_filter = request.args.get('filter', default='', type=str)
             
             query = Song.query
             if name_filter:
-                query = query.filter(func.lower(Song.name).ilike(f"%{name_filter.lower()}%"))
-            songs = query.limit(limit).all()
+                name_filter = name_filter.strip()
+                query = query.join(Song.artists).filter(
+                    or_(
+                        func.lower(Song.title).ilike(f"%{name_filter.lower()}%"),
+                        func.lower(Artist.name).ilike(f"%{name_filter.lower()}%")
+                    )
+                )
+            songs = query.order_by("title").offset(offset).limit(limit).all()
         except Exception as err:
             print(err)
             resp.success = False
@@ -45,8 +52,8 @@ class SongListResource(Resource):
         return resp.to_server_response()
     
     def post(self):
+        resp = CustomResponse(success=True)
         try:
-            authenticate_user([EProfile.ADMINISTRATIVE,EProfile.ADMIN])
             song_dict = song_schema.load(retrieve_response_data(request))
             song = Song(title=song_dict['title'],
                         length=song_dict['length'],
@@ -54,14 +61,16 @@ class SongListResource(Resource):
             )
             update_songs_artists(song_dict, song)
             song.save()
-            resp = song_schema.dump(song)
-            return resp, 201
+            resp.data = song_schema.dump(song)
+            return resp.to_server_response(), 201
         except Exception as err:
             print(err)
+            resp.data = str(err)
+            resp.success = False
             return resp, 405
         
     def put(self):
-        
+        resp = CustomResponse(success=True)
         authenticate_user([EProfile.ADMINISTRATIVE,EProfile.ADMIN])
         song_dict = song_schema.load(retrieve_response_data(request))
         song = Song.get_by_id(song_dict["songId"])
@@ -72,8 +81,8 @@ class SongListResource(Resource):
         song.artists.clear()
         update_songs_artists(song_dict, song)
         song.update()
-        resp = song_schema.dump(song)
-        return resp, 200
+        resp.data = song_schema.dump(song)
+        return resp.to_server_response(), 200
     
 class SongResource(Resource):
     def get(self, song_id):

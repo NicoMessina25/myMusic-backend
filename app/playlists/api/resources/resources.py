@@ -17,7 +17,8 @@ playlist_schema = PlaylistSchema()
 class PlaylistListResource(Resource):
     def get(self):
         resp = CustomResponse(success=True)
-        playlists = Playlist.query.all()
+        user = authenticate_user()
+        playlists = Playlist.query.filter_by(userId=user.userId).all()
         resp.data = playlist_schema.dump(playlists, many=True)
         return resp.to_server_response()
 
@@ -25,23 +26,26 @@ class PlaylistListResource(Resource):
         user = authenticate_user()
         resp = CustomResponse(success=True)
         playlist_dict = playlist_schema.load(retrieve_response_data(request))
-        playlist_dict.userId = user.userId
-        playlist = Playlist(**playlist_dict)
+        playlist_dict["userId"] = user.userId        
+        print(playlist_dict)
+        playlist = Playlist(name=playlist_dict["name"],
+                            userId=playlist_dict["userId"],
+                            description=playlist_dict["description"])
         playlist.save()
         resp.data = playlist_schema.dump(playlist)
         return resp.to_server_response(), 201
     
     def put(self):
-        
         authenticate_user()
+        resp = CustomResponse(success=True)
         playlist_dict = playlist_schema.load(retrieve_response_data(request))
         playlist = Playlist.get_by_id(playlist_dict["playlistId"])
         playlist.name = playlist_dict["name"]
         playlist.description = playlist_dict["description"]
         playlist.updated_at = datetime.now()
         playlist.update()
-        resp = playlist_schema.dump(playlist)
-        return resp, 200
+        resp.data = playlist_schema.dump(playlist)
+        return resp.to_server_response(), 200
 
 class PlaylistResource(Resource):
     def get(self, playlistId):
@@ -63,7 +67,7 @@ class PlaylistResource(Resource):
             resp.message = 'Playlist no encontrada'
             return resp.to_server_response(), 404
         playlist.delete()
-        return resp.to_server_response(), 204
+        return resp.to_server_response(), 200
 
 api.add_resource(PlaylistListResource, '/api/playlists/', endpoint='playlist_list_resource')
 api.add_resource(PlaylistResource, '/api/playlists/<int:playlistId>', endpoint='playlist_resource')

@@ -18,6 +18,7 @@ from app.profiles.api.resources import profile_bp
 from app.playlists.api.resources.songResources import playlist_songs_bp
 from .ext import ma, migrate
 from jwt.exceptions import InvalidSignatureError, ExpiredSignatureError
+from flask_jwt_extended.exceptions import NoAuthorizationError
 
 def create_app(settings_module):
     app = Flask(__name__)
@@ -56,13 +57,7 @@ def create_app(settings_module):
 
 def register_error_handlers(app:Flask):
     
-    def handle_invalid_signature_error(err):
-        print(err)
-        resp = CustomResponse(success=False)
-        resp.message = "Credenciales inválidas"
-        return resp.to_server_response(), 401
-    
-    def handle_expired_signature_error(err):
+    def handle_expired_invalid_signature_error(err):
         print(err)
         resp = CustomResponse(success=False)
         resp.message = "Credenciales inválidas"
@@ -97,8 +92,9 @@ def register_error_handlers(app:Flask):
     def handle_object_not_found_error(e):
         return jsonify({'msg': str(e)}), 404
     
-    app.register_error_handler(InvalidSignatureError, handle_invalid_signature_error)
-    app.register_error_handler(ExpiredSignatureError, handle_expired_signature_error)
+    app.register_error_handler(InvalidSignatureError, handle_expired_invalid_signature_error)
+    app.register_error_handler(ExpiredSignatureError, handle_expired_invalid_signature_error)
+    app.register_error_handler(NoAuthorizationError, handle_expired_invalid_signature_error)
     app.register_error_handler(PermissionError, handle_permission_error)
     app.register_error_handler(Exception, handle_exception_error)
     
