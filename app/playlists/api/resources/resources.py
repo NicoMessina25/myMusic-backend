@@ -42,7 +42,7 @@ class PlaylistListResource(Resource):
         playlist = Playlist.get_by_id(playlist_dict["playlistId"])
         playlist.name = playlist_dict["name"]
         playlist.description = playlist_dict["description"]
-        playlist.updated_at = datetime.now()
+        playlist.updated_at = datetime.now(timezone.utc)
         playlist.update()
         resp.data = playlist_schema.dump(playlist)
         return resp.to_server_response(), 200
