@@ -11,8 +11,8 @@ JWT_REFRESH_TOKEN_EXPIRES = int(os.getenv('JWT_REFRESH_TOKEN_EXPIRES', 30 * 24 *
 PROPAGATE_EXCEPTIONS = True
 
 # Database configuration
-SQLALCHEMY_DATABASE_URI ='sqlite:///songs.sqlite' 
-f"sqlite+{TURSO_DATABASE_URL}/?authToken={TURSO_AUTH_TOKEN}&secure=true" """ <-- para prod """
+SQLALCHEMY_DATABASE_URI =f"sqlite+{TURSO_DATABASE_URL}/?authToken={TURSO_AUTH_TOKEN}&secure=true" 
+'sqlite:///songs.sqlite' """ <-- para dev """
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 SHOW_SQLALCHEMY_LOG_MESSAGES = False
 
