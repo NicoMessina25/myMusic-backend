@@ -1,5 +1,5 @@
 from app.db import db, BaseModelMixin
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 playlist_song = db.Table(
@@ -25,8 +25,8 @@ class Playlist(db.Model, BaseModelMixin):
         self.name = name
         self.description = description
         self.userId = userId
-        self.created_at = datetime.now()
-        self.updated_at = datetime.now()
+        self.created_at = datetime.now(timezone.utc)
+        self.updated_at = datetime.now(timezone.utc)
 
     def __repr__(self):
         return f'Playlist({self.name})'
