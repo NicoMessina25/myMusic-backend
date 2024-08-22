@@ -19,7 +19,7 @@ class Playlist(db.Model, BaseModelMixin):
     userId = db.Column(db.Integer, db.ForeignKey('user.userId'), nullable=False)
     created_at = db.Column(db.DateTime, nullable=False)
     updated_at = db.Column(db.DateTime, nullable=False)
-    songs = db.relationship('Song', secondary= playlist_song, back_populates='playlists')
+    songs = db.relationship('Song', secondary= playlist_song, back_populates='playlists', lazy='dynamic')
 
     def __init__(self, name, userId, description=None):
         self.name = name

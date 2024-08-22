@@ -6,8 +6,9 @@ from ....common.error_handling import ObjectNotFound
 from ....common.utils import retrieve_response_data
 from ....auth.authManager import authenticate_user
 from jwt.exceptions import InvalidSignatureError, ExpiredSignatureError
-from ..schemas import PlaylistSchema
-from datetime import datetime
+from ..schemas import PlaylistSchema, PlaylistSchemaWithSongs
+from datetime import datetime, timezone
+from sqlalchemy.orm import noload
 
 playlist_bp = Blueprint('playlist_bp', __name__)
 api = Api(playlist_bp)
@@ -18,7 +19,7 @@ class PlaylistListResource(Resource):
     def get(self):
         resp = CustomResponse(success=True)
         user = authenticate_user()
-        playlists = Playlist.query.filter_by(userId=user.userId).all()
+        playlists = Playlist.query.options(noload(Playlist.songs)).filter_by(userId=user.userId).all()
         resp.data = playlist_schema.dump(playlists, many=True)
         return resp.to_server_response()
 
